@@ -1,0 +1,69 @@
+{
+  "project_info": {
+    "project_number": "104942185944",
+    "firebase_url": "https://asas-f24c3-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "asas-f24c3",
+    "storage_bucket": "asas-f24c3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:104942185944:android:df752f420a2a11f4cb96ad",
+        "android_client_info": {
+          "package_name": "com.chatapprn"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "104942185944-lq8scq33cr90k2k55ut1o5ahahjhn7f8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD1KUiTL4j8ekD1jE5F0JqtbXvw_TolT_c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "104942185944-lq8scq33cr90k2k55ut1o5ahahjhn7f8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:104942185944:android:c4b1e58b41e49983cb96ad",
+        "android_client_info": {
+          "package_name": "com.rn_chat_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "104942185944-lq8scq33cr90k2k55ut1o5ahahjhn7f8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD1KUiTL4j8ekD1jE5F0JqtbXvw_TolT_c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "104942185944-lq8scq33cr90k2k55ut1o5ahahjhn7f8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
