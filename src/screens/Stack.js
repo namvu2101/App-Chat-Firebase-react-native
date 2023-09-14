@@ -5,18 +5,19 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {PaperProvider} from 'react-native-paper';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import Login from './Login';
-import Register from './Register';
+import Login from './Login/Login';
+import Register from './Register/Register';
 import Settings from './Settings';
 import Home from './Home/Index';
 import LoadingScreen from './Loading';
-import {auth} from '../../api/firebaseConfig';
+import {auth} from '../firebase/firebaseConfig';
 import UserProfile from './User/Index';
 import Index from './Friend/Index';
-import Chat from './Chat/Index';
-import GroupChat from './GroupChat/Index';
-import Group_Message from './GroupChat/Group_Message';
-import Test from '../Test';
+import Chat_Message from './Chat/Chat_Message';
+import Friends_Request from './Notifycation';
+import AddChat from './GroupChat/Index';
+import ChatSettings from './Chat/Chat_Settings';
+import SearchFriend from './Friend/Search_Friends';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -65,12 +66,12 @@ function MyTabs() {
         }}
       />
       <Tab.Screen
-        name="Group"
-        component={GroupChat}
+        name="Notifycation"
+        component={Friends_Request}
         options={{
           tabBarIcon: ({color, size}) => (
             <MaterialCommunityIcons
-              name="account-group-outline"
+              name="bell-outline"
               color={color}
               size={size}
             />
@@ -98,7 +99,7 @@ export default function StackNavigation() {
     <PaperProvider>
       <NavigationContainer>
         <Stack.Navigator
-          initialRouteName={auth().currentUser ? 'Loading' : 'Login'}
+          initialRouteName={'Loading'}
           screenOptions={{headerTitleAlign: 'center'}}>
           <Stack.Screen
             name="Login"
@@ -125,17 +126,25 @@ export default function StackNavigation() {
             component={UserProfile}
             options={{headerShown: false}}
           />
-          <Stack.Screen name="Chat" component={Chat} />
-
-          <Tab.Screen name="Group_Message" component={Group_Message} />
+          <Tab.Screen name="Chat_Message" component={Chat_Message} />
           <Stack.Screen
             name="Settings"
             component={Settings}
             options={{headerShown: false}}
           />
           <Stack.Screen
-            name="Test"
-            component={Test}
+            name="AddChat"
+            component={AddChat}
+            options={{headerShown: false}}
+          />
+          <Stack.Screen
+            name="ChatSettings"
+            component={ChatSettings}
+            options={{headerShown: false}}
+          />
+          <Stack.Screen
+            name="SearchFriend"
+            component={SearchFriend}
             options={{headerShown: false}}
           />
         </Stack.Navigator>

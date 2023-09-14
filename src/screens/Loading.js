@@ -1,25 +1,41 @@
 import React, {useLayoutEffect, useEffect} from 'react';
-import {View, ActivityIndicator} from 'react-native';
 import {useIsFocused} from '@react-navigation/native';
-import {auth} from '../../api/firebaseConfig';
+import {auth} from '../firebase/firebaseConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {getUserdata, logout} from '../../api/actions';
-import {UserStore} from '../Store/store';
+import {useProfileStore} from '../Store/profileStore';
+import {useListMessage} from '../Store/list_messageStore';
+import LinearGradient from 'react-native-linear-gradient';
+import {ActivityIndicator, Avatar, ProgressBar} from 'react-native-paper';
 
 const LoadingScreen = ({navigation}) => {
+  const {getList, list} = useListMessage();
   const isFocused = useIsFocused();
-  const userState = UserStore(state => state.user);
-
+  const {getData} = useProfileStore();
+  const [progress, setProgress] = React.useState(0);
   useLayoutEffect(() => {
-    const checkUser = async () => {
+    const checkUserAndRedirect = async () => {
       const uid = await AsyncStorage.getItem('uid');
       const user = auth().currentUser;
+
       try {
-        getUserdata(uid);
+        getData(uid);
+        getList(uid);
+
         if (user && isFocused) {
-          setTimeout(() => {
-            navigation.replace('Tabs');
-          }, 1000);
+          let newProgress = 0;
+          const intervalId = setInterval(() => {
+            newProgress += 0.1;
+            setProgress(newProgress);
+
+            if (newProgress >= 1) {
+              clearInterval(intervalId);
+              navigation.replace('Tabs');
+            }
+          }, 200);
+
+          return () => {
+            clearInterval(intervalId);
+          };
         } else {
           navigation.replace('Login');
         }
@@ -28,18 +44,31 @@ const LoadingScreen = ({navigation}) => {
       }
     };
 
-    checkUser();
+    checkUserAndRedirect();
   }, [isFocused]);
+
   return (
-    <View
+    <LinearGradient
+      colors={['#3777F0', '#FFFFFF']}
       style={{
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: 'red',
       }}>
-      <ActivityIndicator size="large" color="#fff" />
-    </View>
+      <Avatar.Image source={require('../../assets/iconapp.jpg')} size={88} />
+      <ProgressBar
+        progress={progress}
+        color={'#FFFFFF'}
+        style={{
+          height: 10,
+          width: 150,
+          borderRadius: 5,
+          backgroundColor: '#477FEE',
+          marginVertical:10
+        }}
+      />
+    </LinearGradient>
   );
 };
 

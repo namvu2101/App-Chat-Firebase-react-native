@@ -8,7 +8,7 @@ export default function Custom_item({item}) {
   return (
     <List.Item
       onPress={() => {
-        navigation.navigate('Group_Message',item)
+        navigation.navigate('Chat_Message',item)
       }}
       key={item.id}
       title={item.name}

@@ -3,53 +3,44 @@ import {
   Text,
   View,
   TouchableOpacity,
-  TextInput,
   Keyboard,
   FlatList,
+  Pressable,
 } from 'react-native';
 import React, {useEffect, useLayoutEffect, useState} from 'react';
 import {useNavigation} from '@react-navigation/native';
-import {Avatar} from 'react-native-paper';
+import {Avatar, TextInput} from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {db, storage} from '../../../api/firebaseConfig';
-import {UserStore} from '../../Store/store';
+import {db, storage} from '../../firebase/firebaseConfig';
 import {firebase} from '@react-native-firebase/firestore';
 import List_Message from './List_Message';
 import {launchImageLibrary} from 'react-native-image-picker';
 import uuid from 'react-native-uuid';
-export default function Group_Message({route}) {
+import {screenwidth} from '../conponents/Dimensions';
+import {useProfileStore} from '../../Store/profileStore';
+export default function Chat_Message({route}) {
   const navigation = useNavigation();
   const [inputText, setInputText] = useState('');
-  const [checkData, setcheckData] = useState();
-  const userState = UserStore(state => state.user);
+  const [submit, setSubmit] = useState(false);
   const [messages, setMessages] = useState([]);
   const item = route.params;
+  const {data} = useProfileStore();
   useLayoutEffect(() => {
     navigation.setOptions({
       headerTitleAlign: 'left',
       headerTitle: () => (
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-          }}>
+        <View style={styles.header}>
           <Avatar.Image size={49} source={{uri: item.avatar}} />
-          <Text
-            style={{
-              color: '#000',
-              fontWeight: 'bold',
-              fontSize: 20,
-              marginHorizontal: 10,
-            }}>
+          <Text numberOfLines={1} style={styles.title_header}>
             {item.name}
           </Text>
         </View>
       ),
       headerRight: () => (
-        <>
+        <View style={{flexDirection: 'row', marginRight: -20}}>
           <TouchableOpacity onPress={() => alert('video call')}>
             <Avatar.Icon
-              size={45}
+              size={40}
               icon="video"
               style={{backgroundColor: '#fff'}}
             />
@@ -61,14 +52,15 @@ export default function Group_Message({route}) {
               style={{backgroundColor: '#fff'}}
             />
           </TouchableOpacity>
-          <TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('ChatSettings', item)}>
             <Avatar.Icon
               size={40}
               icon="information"
               style={{backgroundColor: '#fff'}}
             />
           </TouchableOpacity>
-        </>
+        </View>
       ),
     });
   }, [route]);
@@ -94,40 +86,34 @@ export default function Group_Message({route}) {
 
     return () => unsubscribe();
   }, [item]);
+  useEffect(() => {
+    if (inputText == '') {
+      setSubmit(false);
+    } else setSubmit(true);
+  }, [inputText]);
 
-  useLayoutEffect(() => {
-    const unsubscribe = async () => {
-      const user = await db.collection('Chats').doc(item.id).get();
-      setcheckData(user.data());
-    };
-    unsubscribe();
-  }, [item]);
-  ///////////////////////////////////
-
-  //////////////////////
   const onSendMessage = async (messageType, imageUri) => {
-    Keyboard.dismiss();
     setInputText('');
     const timestamp = firebase.firestore.FieldValue.serverTimestamp();
     const formData = {
       timestamp,
-      senderId: userState.id,
-      avatar: userState.avatar,
-      name: userState.name,
+      senderId: data.id,
+      avatar: data.avatar,
+      name: data.name,
     };
 
     if (messageType === 'image') {
-      formData.messageType = 'image'; // Use assignment '=' instead of '()'
+      formData.messageType = 'image';
       formData.photo = imageUri;
       formData.messageText = 'send photo';
     } else {
-      formData.messageType = 'text'; // Use assignment '=' instead of '()'
+      formData.messageType = 'text';
       formData.messageText = inputText;
     }
     if (item.type === 'Person') {
       const chatIds = [
-        `${userState.id}-${item.reciverID}`,
-        `${item.reciverID}-${userState.id}`,
+        `${data.id}-${item.reciverID}`,
+        `${item.reciverID}-${data.id}`,
       ];
 
       const updateTimestamps = chatIds.map(chatId => {
@@ -135,22 +121,20 @@ export default function Group_Message({route}) {
         return chatRef.set({
           type: 'Person',
           timestamp,
-          member_id:
-            chatId === `${userState.id}-${item.reciverID}`
-              ? userState.id
+          senderID:
+            chatId === `${data.id}-${item.reciverID}`
+              ? data.id
               : item.reciverID,
           name:
-            chatId === `${userState.id}-${item.reciverID}`
-              ? item.name
-              : userState.name,
+            chatId === `${data.id}-${item.reciverID}` ? item.name : data.name,
           avatar:
-            chatId === `${userState.id}-${item.reciverID}`
+            chatId === `${data.id}-${item.reciverID}`
               ? item.avatar
-              : userState.avatar,
+              : data.avatar,
           reciverID:
-            chatId === `${userState.id}-${item.reciverID}`
+            chatId === `${data.id}-${item.reciverID}`
               ? item.reciverID
-              : userState.id,
+              : data.id,
         });
       });
 
@@ -167,10 +151,13 @@ export default function Group_Message({route}) {
       await Promise.all([...updateTimestamps, ...sendMessagePromises]);
     } else {
       db.collection('Chats').doc(item.id).collection('messages').add(formData);
+      db.collection('Chats').doc(item.id).update({
+        timestamp,
+      });
     }
   };
   const pickImage = async () => {
-    const id = uuid.v4()
+    const id = uuid.v4();
     const reference = storage().ref(`Chats/${item.id}/Files/${id}`);
     const options = {
       mediaType: 'photo',
@@ -180,7 +167,7 @@ export default function Group_Message({route}) {
 
     launchImageLibrary(options, response => {
       if (response.didCancel) {
-        console.log('User cancelled image picker');
+        console.log('data cancelled image picker');
       } else if (response.error) {
         console.log('ImagePicker Error: ', response.error);
       } else {
@@ -211,34 +198,50 @@ export default function Group_Message({route}) {
         showsVerticalScrollIndicator={false}
         data={messages}
         renderItem={({item}) => (
-          <List_Message item={item.data} userId={userState.id} />
+          <List_Message item={item.data} userId={data.id} user={route.params} />
         )}
         keyExtractor={item => item.id}
       />
-      <View style={styles.inputContainer}>
+      <View style={styles._input_box}>
+        <MaterialCommunityIcons name="paperclip" size={25} color={'#000E08'} />
         <TextInput
-          style={styles.input}
           value={inputText}
-          onChangeText={text => setInputText(text)}
-          placeholder="Type a message..."
-          placeholderTextColor={'#ccc'}
+          onChangeText={setInputText}
+          outlineStyle={styles._text_input}
+          style={{width: '70%', paddingHorizontal: 5}}
+          textColor="#000E08"
+          cursorColor="#000E08"
+          mode="outlined"
+          right={<TextInput.Icon icon="file-outline" color={'#797C7B'} />}
         />
-        <TouchableOpacity onPress={pickImage}>
-          <Avatar.Icon
-            size={35}
-            icon="image"
-            style={styles.buttonContainer}
-            color="#2C6BED"
-          />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => onSendMessage('text')}>
-          <Avatar.Icon
-            size={35}
-            icon="send"
-            style={styles.buttonContainer}
-            color="#2C6BED"
-          />
-        </TouchableOpacity>
+        <View style={styles._btnSend}>
+          {submit ? (
+            <Pressable onPress={() => onSendMessage('text')}>
+              <MaterialCommunityIcons
+                name="send-circle"
+                size={44}
+                color={'#20A090'}
+              />
+            </Pressable>
+          ) : (
+            <>
+              <Pressable style={{marginRight: 10}} onPress={pickImage}>
+                <MaterialCommunityIcons
+                  name="camera-outline"
+                  size={25}
+                  color={'#000E08'}
+                />
+              </Pressable>
+              <Pressable>
+                <MaterialCommunityIcons
+                  name="microphone"
+                  size={25}
+                  color={'#000E08'}
+                />
+              </Pressable>
+            </>
+          )}
+        </View>
       </View>
     </View>
   );
@@ -268,5 +271,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: 80,
     paddingHorizontal: 10,
+  },
+  _btnSend: {
+    width: 50,
+    justifyContent: 'center',
+    flexDirection: 'row',
+    marginHorizontal: 10,
+  },
+  _text_input: {
+    borderRadius: 25,
+    backgroundColor: '#F3F6F6',
+    borderColor: '#F3F6F6',
+    marginHorizontal: 10,
+  },
+  _input_box: {
+    height: 80,
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: screenwidth,
+    justifyContent: 'center',
+  },
+  header: {
+    marginLeft: -20,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  title_header: {
+    color: '#000',
+    fontWeight: 'bold',
+    fontSize: 18,
+    marginHorizontal: 10,
+    width: 120,
   },
 });

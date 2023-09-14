@@ -1,37 +1,51 @@
-import {Pressable, Text} from 'react-native';
 import React from 'react';
+import {Pressable, Text, StyleSheet} from 'react-native';
 import {Avatar} from 'react-native-paper';
 import {useNavigation} from '@react-navigation/native';
-import {UserStore} from '../../Store/store';
+import {useProfileStore} from '../../Store/profileStore';
 
-export default function Friends_item({item}) {
+const styles = StyleSheet.create({
+  container: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    marginRight: 2,
+  },
+  text: {
+    textAlign: 'center',
+    marginHorizontal: 2,
+    color: '#FFFFFF',
+    height: 35,
+  },
+  avatar: {
+    height: 60,
+    width: 60,
+  },
+});
+
+export default function FriendsItem({item}) {
   const navigation = useNavigation();
-  const userState = UserStore(state => state.user);
+  const {data} = useProfileStore();
 
   return (
     <Pressable
       onPress={() => {
-        navigation.navigate('Group_Message', {
-          id: `${userState.id}-${item.id}`,
-          senderId: userState.id,
+        navigation.navigate('Chat_Message', {
+          id: `${data.id}-${item.id}`,
+          senderId: data.id,
           name: item.name,
           avatar: item.avatar,
           type: 'Person',
           reciverID: item.id,
-          
         });
       }}
-      style={{
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: 80,
-        marginRight: 2,
-        
-      }}>
-      <Avatar.Image source={{uri: item.avatar}} size={60} />
-      <Text
-        numberOfLines={2}
-        style={{textAlign: 'center', marginHorizontal: 2, color: '#FFFFFF',height:35}}>
+      style={styles.container}>
+      <Avatar.Image
+        source={{uri: item.avatar}}
+        size={60}
+        style={styles.avatar}
+      />
+      <Text numberOfLines={2} style={styles.text}>
         {item.name}
       </Text>
     </Pressable>

@@ -8,56 +8,27 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:104942185944:android:df752f420a2a11f4cb96ad",
+        "mobilesdk_app_id": "1:104942185944:android:3ac551947bdb2cb5cb96ad",
         "android_client_info": {
           "package_name": "com.chatapprn"
         }
       },
       "oauth_client": [
         {
-          "client_id": "104942185944-lq8scq33cr90k2k55ut1o5ahahjhn7f8.apps.googleusercontent.com",
+          "client_id": "104942185944-j92qr56hul2ae9ieeq0jbu3g7ruf4140.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyD1KUiTL4j8ekD1jE5F0JqtbXvw_TolT_c"
+          "current_key": "AIzaSyA-1atK7mEawngz4kGf95fAYVW3Uap4i4A"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "104942185944-lq8scq33cr90k2k55ut1o5ahahjhn7f8.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:104942185944:android:c4b1e58b41e49983cb96ad",
-        "android_client_info": {
-          "package_name": "com.rn_chat_app"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "104942185944-lq8scq33cr90k2k55ut1o5ahahjhn7f8.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyD1KUiTL4j8ekD1jE5F0JqtbXvw_TolT_c"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "104942185944-lq8scq33cr90k2k55ut1o5ahahjhn7f8.apps.googleusercontent.com",
+              "client_id": "104942185944-42eg4ov12ls2ol7s47fjr5e3f0udhvne.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

@@ -3,10 +3,9 @@ import React, {useState} from 'react';
 import Modal from 'react-native-modal';
 import {Button} from 'react-native-paper';
 import DatePicker from 'react-native-date-picker';
-import {launchImageLibrary} from 'react-native-image-picker';
-import ListAvatar from '../User/ListAvatar';
-import {storage} from '../../../api/firebaseConfig';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import ListAvatar from '../conponents/ListAvatar';
+import {handlePickImage} from '../conponents/ImagePicker';
+
 export default function Modal_Profile({
   isVisible,
   onClose,
@@ -27,35 +26,6 @@ export default function Modal_Profile({
     onClose();
   };
 
-  const handlePickImage = async () => {
-    const options = {
-      mediaType: 'photo',
-      includeBase64: false,
-      quality: 1,
-    };
-
-    launchImageLibrary(options, response => {
-      if (response.didCancel) {
-        console.log('User cancelled image picker');
-      } else if (response.error) {
-        console.log('ImagePicker Error: ', response.error);
-      } else {
-        const pathToFile = response.assets[0].uri;
-        saveImage(pathToFile);
-        onClose();
-      }
-    });
-  };
-  const saveImage = async image => {
-    const uid = await AsyncStorage.getItem('uid');
-    const reference = storage().ref(`Users/Avatar/${uid}`);
-    try {
-      reference.putFile(image).then(async () => {
-        const downloadURL = await reference.getDownloadURL();
-        setImage(downloadURL);
-      });
-    } catch (error) {}
-  };
   return (
     <Modal
       animationOutTiming={500}
@@ -102,7 +72,12 @@ export default function Modal_Profile({
             alignItems: 'center',
             paddingVertical: 20,
           }}>
-          <Button mode="contained" onPress={handlePickImage}>
+          <Button
+            mode="contained"
+            onPress={() => {
+              onClose();
+              handlePickImage(setImage);
+            }}>
             Select From Galery
           </Button>
           <ListAvatar setImage={setImage} onClose={onClose} />

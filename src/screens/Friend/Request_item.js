@@ -1,16 +1,16 @@
-import {StyleSheet, Text, View, Alert, TouchableOpacity} from 'react-native';
-import React from 'react';
-import {Avatar} from 'react-native-paper';
-import {firebase} from '@react-native-firebase/firestore';
-import {UserStore} from '../../Store/store';
-import {db} from '../../../api/firebaseConfig';
-import {screenwidth} from '../Dimensions';
+import { StyleSheet, Text, View, Pressable, FlatList, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { Avatar } from 'react-native-paper';
+import { firebase } from '@react-native-firebase/firestore';
+import { db } from '../../firebase/firebaseConfig';
+import { screenwidth } from '../conponents/Dimensions';
+import { useProfileStore } from '../../Store/profileStore';
 
-export default function Request_item({item, check, mode, friend}) {
-  const userState = UserStore(state => state.user);
-  const [request, setRequest] = React.useState();
-  const [disable, setDisable] = React.useState(true);
-  const id = userState.id;
+export default function RequestItem({ item, check, mode, friend }) {
+  const [request, setRequest] = useState();
+  const [disable, setDisable] = useState(true);
+  const { data } = useProfileStore();
+  const id = data.id;
 
   React.useEffect(() => {
     if (check) {
@@ -19,6 +19,7 @@ export default function Request_item({item, check, mode, friend}) {
       setRequest(false);
     }
   }, []);
+
   React.useEffect(() => {
     setDisable(true);
     setTimeout(() => {
@@ -26,8 +27,8 @@ export default function Request_item({item, check, mode, friend}) {
     }, 3000);
   }, [request]);
 
-  const sentRequest = item => {
-     db.doc(`Users/${userState.id}`).update({
+  const sentRequest = (item) => {
+    db.doc(`Users/${data.id}`).update({
       sentFriendRequest: firebase.firestore.FieldValue.arrayUnion({
         id: item.id,
         name: item.name,
@@ -35,41 +36,44 @@ export default function Request_item({item, check, mode, friend}) {
       }),
     });
   };
-  const updateFriendsRequest = item => {
-    const userSent = {
-      id: `${userState.id}`,
-      name: `${userState.name}`,
-      avatar: `${userState.avatar}`,
+
+  const updateFriendsRequest = (item) => {
+    const dataSent = {
+      id: `${data.id}`,
+      name: `${data.name}`,
+      avatar: `${data.avatar}`,
     };
     try {
-       db.doc(`Users/${item.id}`).update({
-        friendsRequest: firebase.firestore.FieldValue.arrayUnion(userSent),
+      db.doc(`Users/${item.id}`).update({
+        friendsRequest: firebase.firestore.FieldValue.arrayUnion(dataSent),
       });
       console.log('Friends request updated successfully!');
     } catch (error) {
       console.error('Error updating friends request:', error);
     }
   };
-  const removeFriendsRequest = async item => {
-    const userSent = {
-      id: `${userState.id}`,
-      name: `${userState.name}`,
-      avatar: `${userState.avatar}`,
+
+  const removeFriendsRequest = async (item) => {
+    const dataSent = {
+      id: `${data.id}`,
+      name: `${data.name}`,
+      avatar: `${data.avatar}`,
     };
     await db
       .doc(`Users/${item.id}`)
       .update({
-        friendsRequest: firebase.firestore.FieldValue.arrayRemove(userSent),
+        friendsRequest: firebase.firestore.FieldValue.arrayRemove(dataSent),
       })
       .then(() => {
         console.log('remove success');
       })
-      .catch(e => {
+      .catch((e) => {
+        console.log('remove error');
         console.log(e);
       });
   };
 
-  const delSentRequest = async item => {
+  const delSentRequest = async (item) => {
     await db
       .doc(`Users/${id}`)
       .update({
@@ -82,7 +86,7 @@ export default function Request_item({item, check, mode, friend}) {
       .then(() => {
         console.log('delete requests');
       })
-      .catch(e => {
+      .catch((e) => {
         console.log(e);
       });
   };
@@ -98,21 +102,10 @@ export default function Request_item({item, check, mode, friend}) {
   };
 
   return (
-    <View
-      style={{
-        height: 69,
-        flexDirection: 'row',
-        width: screenwidth,
-        paddingHorizontal: 20,
-        alignItems: 'center',
-        borderBottomWidth: 1,
-        borderBottomColor: '#000',
-      }}>
-      <Avatar.Image source={{uri: item.avatar}} size={50} />
-      <View style={{marginHorizontal: 10, width: '55%'}}>
-        <Text style={{color: '#000', fontSize: 16, fontWeight: 'bold'}}>
-          {item.name}
-        </Text>
+    <View style={styles.container}>
+      <Avatar.Image source={{ uri: item.avatar }} style={styles.avatar} size={50} />
+      <View style={styles.nameContainer}>
+        <Text style={styles.name}>{item.name}</Text>
       </View>
 
       {mode === 'List_Request' ? (
@@ -122,17 +115,8 @@ export default function Request_item({item, check, mode, friend}) {
             removeFriendsRequest(item);
             delSentRequest(item);
           }}
-          style={{
-            backgroundColor: '#FF0000',
-            borderRadius: 5,
-            height: 30,
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginRight: 10,
-            paddingHorizontal: 5,
-            width: 66,
-          }}>
-          <Text style={{color: '#fff'}}>Cancel</Text>
+          style={styles.cancelButton}>
+          <Text style={styles.cancelButtonText}>Cancel</Text>
         </TouchableOpacity>
       ) : mode === 'List_Search' && check != null ? (
         <TouchableOpacity
@@ -141,36 +125,88 @@ export default function Request_item({item, check, mode, friend}) {
             setRequest(!request);
             checkActions(item, request);
           }}
-          style={{
-            backgroundColor: request ? '#FF0000' : '#8A2BE2',
-            borderRadius: 5,
-            height: 30,
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginRight: 10,
-            paddingHorizontal: 5,
-            width: 66,
-          }}>
-          <Text style={{color: '#fff'}}>{request ? 'Cancel' : 'Request'}</Text>
+          style={[
+            styles.requestButton,
+            {
+              backgroundColor: request ? '#FF0000' : '#8A2BE2',
+            },
+          ]}>
+          <Text style={styles.requestButtonText}>
+            {request ? 'Cancel' : 'Request'}
+          </Text>
         </TouchableOpacity>
       ) : (
         <TouchableOpacity
           onPress={() => {
-              console.log('aaa');
+            console.log('aaa');
           }}
-          style={{
-            backgroundColor: '#C0C0C0',
-            borderRadius: 5,
-            height: 30,
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginRight: 10,
-            paddingHorizontal: 5,
-            width: 66,
-          }}>
-          <Text style={{color: '#fff'}}>Friend</Text>
+          style={styles.friendButton}>
+          <Text style={styles.friendButtonText}>Friend</Text>
         </TouchableOpacity>
       )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    height: 69,
+    flexDirection: 'row',
+    width: screenwidth,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#000',
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+  },
+  nameContainer: {
+    marginHorizontal: 10,
+    width: '55%',
+  },
+  name: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  cancelButton: {
+    backgroundColor: '#FF0000',
+    borderRadius: 5,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+    paddingHorizontal: 5,
+    width: 66,
+  },
+  cancelButtonText: {
+    color: '#fff',
+  },
+  requestButton: {
+    borderRadius: 5,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+    paddingHorizontal: 5,
+    width: 66,
+  },
+  requestButtonText: {
+    color: '#fff',
+  },
+  friendButton: {
+    backgroundColor: '#C0C0C0',
+    borderRadius: 5,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+    paddingHorizontal: 5,
+    width: 66,
+  },
+  friendButtonText: {
+    color: '#fff',
+  },
+});

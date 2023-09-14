@@ -6,44 +6,49 @@ import {
   Pressable,
   ScrollView,
   Alert,
+  Image,
 } from 'react-native';
 import {Avatar, TextInput} from 'react-native-paper';
 import {useNavigation} from '@react-navigation/native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {UserStore} from '../../Store/store';
-import {auth, db, storage} from '../../../api/firebaseConfig';
-import Modal_Profile from '../Modals/Modal_Profile';
-import {screenwidth} from '../Dimensions';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {auth, db, storage} from '../../firebase/firebaseConfig';
+import Modal_Profile from './Modal_Avatar';
+import {screenwidth} from '../conponents/Dimensions';
+import {useProfileStore} from '../../Store/profileStore';
+import uuid from 'react-native-uuid';
 
 export default function UserProfile() {
-  const userProfile = UserStore(state => state.user);
+  const {data} = useProfileStore();
   const navigation = useNavigation();
   const [isVisible, setisVisible] = React.useState(false);
-  const [image, setImage] = useState(userProfile.avatar);
+  const [image, setImage] = useState(data.avatar);
   const [type, setType] = useState('');
-  const [dec, setdec] = useState(userProfile.dec);
-  const [date, setDate] = useState(userProfile.Dateofbirth);
+  const [dec, setdec] = useState(data.dec);
+  const [date, setDate] = useState(data.Dateofbirth);
   const list = [
     {
       name: 'Display Name',
-      value: userProfile.name,
+      value: data.name,
       editable: false,
+      inputMode: 'text',
     },
     {
       name: 'Email Address',
       value: auth().currentUser.email,
       editable: false,
+      inputMode: 'email',
     },
     {
       name: 'Address',
-      value: userProfile.address,
+      value: data.address,
       editable: false,
+      inputMode: 'text',
     },
     {
       name: 'Phone Number',
       value: auth().currentUser.phoneNumber,
       editable: false,
+      inputMode: 'numeric',
     },
   ];
   const [profileFields, setProfileFields] = useState(list);
@@ -61,12 +66,17 @@ export default function UserProfile() {
     updatedFields[index].editable = !updatedFields[index].editable;
     setProfileFields(updatedFields);
   };
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
+    const idImage = uuid.v4();
+    const reference = storage().ref(`Users/${data.id}/Avatar/${idImage}`);
     try {
+      const avatarUrl = image.includes('http')
+        ? image
+        : await uploadImage(reference, image);
       db.collection('Users')
-        .doc(userProfile.id)
+        .doc(data.id)
         .update({
-          avatar: image,
+          avatar: avatarUrl,
           name: profileFields[0].value,
           address: profileFields[2].value,
           Dateofbirth: date,
@@ -83,17 +93,20 @@ export default function UserProfile() {
       console.log(error);
     }
   };
+  const uploadImage = async (reference, image) => {
+    await reference.putFile(image);
+    return await reference.getDownloadURL();
+  };
   return (
     <View style={styles.container}>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          width: 300,
-          height: 50,
-          marginVertical: 10,
-          justifyContent: 'space-between',
-        }}>
+      <Image
+        source={{
+          uri: 'https://th.bing.com/th/id/R.31a057b002e52be3a87c1554ab0df61f?rik=pUq4kE2yAahmbg&riu=http%3a%2f%2f4.bp.blogspot.com%2f-cFrX94jbehk%2fUQgQyh66j3I%2fAAAAAAAAAk4%2fqFaJ1jjlMV8%2fs1600%2f9b516f4441a7bfb5174b33ebf74fc1d6_49102622.freebackgrounds5.jpg&ehk=Koj52Q69rFc9d4z9WglpPOi%2fpBSpUT3sFBd9r1fhnok%3d&risl=&pid=ImgRaw&r=0]',
+        }}
+        style={{width: screenwidth, height: '33%', position: 'absolute'}}
+        resizeMode="cover"
+      />
+      <View style={styles.header}>
         <Pressable
           onPress={() => {
             if (list !== profileFields) {
@@ -134,8 +147,9 @@ export default function UserProfile() {
           size={70}
         />
       </Pressable>
-      <Text>{userProfile.name}</Text>
-      <Text>{userProfile.dec}</Text>
+      <Text>{data.name}</Text>
+      <Text>{data.dec}</Text>
+
       <View style={styles.profileForm}>
         <ScrollView style={styles.formScroll}>
           {profileFields.map((field, index) => (
@@ -147,6 +161,7 @@ export default function UserProfile() {
                   disabled={!field.editable}
                   value={field.value}
                   mode="outlined"
+                  inputMode={field.inputMode}
                   onChangeText={newValue => handleFieldChange(index, newValue)}
                   style={{
                     flex: 1,
@@ -206,7 +221,6 @@ export default function UserProfile() {
       <Modal_Profile
         isVisible={isVisible}
         onClose={onClose}
-        image={image}
         setDate={setDate}
         setImage={setImage}
         type={type}
@@ -253,5 +267,13 @@ const styles = StyleSheet.create({
   mediaShared: {
     color: '#000',
     height: 300,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: 300,
+    height: 50,
+    marginVertical: 10,
+    justifyContent: 'space-between',
   },
 });
